@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace UiPathMigrationHelper_Console.Logger
 {
-    internal class ConsoleLogger : ILogger
+    internal class ConsoleLogger : IServiceLogger
     {
         private LogLevel _minLogLevel = LogLevel.Warning;
         public void Log(LogLevel level, string data)
