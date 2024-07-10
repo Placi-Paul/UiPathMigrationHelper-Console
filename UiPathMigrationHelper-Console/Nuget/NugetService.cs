@@ -17,15 +17,9 @@ namespace UiPathMigrationHelper_Console.Nuget
             //List<Lazy<INuGetResourceProvider>> providers = [.. Repository.Provider.GetCoreV3()];
             //PackageSource packageSource = new PackageSource(sourceUrl);
             //_sourceRepository = new SourceRepository(packageSource, providers);
-            
-            Initialize(sourceUrl);
-            _logger = logger;
-        }
 
-        public void Initialize(string sourceUrl)
-        {
-            if (_sourceRepository is not null) return;
             _sourceRepository = Repository.Factory.GetCoreV3(sourceUrl);
+            _logger = logger;
         }
 
         public async Task<ICollection<PackageGroup>> ListAllAsync(

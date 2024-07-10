@@ -12,5 +12,7 @@ namespace UiPathMigrationHelper_Console.Nuget
             PackageSearchMetadata = packageSearchMetadata;
             Dependencies = packageSearchMetadata.DependencySets.Any() ? packageSearchMetadata.DependencySets : Enumerable.Empty<PackageDependencyGroup>();
         }
+
+
     }
 }
