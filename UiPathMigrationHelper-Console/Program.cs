@@ -1,8 +1,8 @@
 ﻿using Cocona;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Common;
-using NuGet.Frameworks;
 using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using UiPathMigrationHelper_Console.Logger;
 using UiPathMigrationHelper_Console.Nuget;
 
@@ -13,7 +13,7 @@ internal class Program
         await CoconaApp.CreateHostBuilder()
             .ConfigureServices(services =>
             {
-                services.AddScoped<IServiceLogger, ConsoleLogger>();
+                services.AddSingleton<IServiceLogger, ConsoleLogger>();
             })
             .RunAsync<Program>(args);
     }
@@ -74,7 +74,7 @@ internal class Program
 
         foreach (var package in packages)
         {
-            Console.WriteLine($"Package {package.PackageSearchMetadata.Identity.Id}. Current Framework: {package.Dependencies.First().TargetFramework.Framework.ToUiPathProject()}");
+            Console.WriteLine(package.GetNameVersionProjectType());
 
             foreach (var dependecyGroup in package.Dependencies)
             {
@@ -82,13 +82,19 @@ internal class Program
                 {
                     var dependecyData = await dependencyService.GetMetadataAsync(new PackageIdentity(dependecy.Id, dependecy.VersionRange.MinVersion));
 
+                    if (dependecyData is null)
+                    {
+                        Console.WriteLine($"! Package NOT found for {dependecy.Id} version{dependecy.VersionRange.MinVersion}");
+                        continue;
+                    }
+
                     if (dependecyData.DependencySets.Any(ds => ds.TargetFramework.Framework == targetProject.ToNetFramework()))
                     {
-                        Console.WriteLine($"Match found for {dependecy.Id}. Compatible with {targetProject}");
+                        Console.WriteLine($"Match found for {dependecy.GetNameAndVersion()}; Compatible with {targetProject}");
                     }
                     else
                     {
-                        Console.WriteLine($"! Match NOT found for {dependecy.Id}.");
+                        Console.WriteLine($"! Match NOT found for {dependecy.GetNameAndVersion()}; NOT compatible with {targetProject}.");
                     }
                 }
             }
@@ -103,6 +109,7 @@ internal class Program
 
         throw new CommandExitedException("Feed Url is not valid", 101);
     }
+
 
     [Ignore]
     private void PrintPackageAndDepedencies(IEnumerable<PackageGroup> packages)
