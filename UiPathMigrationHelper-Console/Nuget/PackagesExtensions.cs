@@ -11,12 +11,11 @@ namespace UiPathMigrationHelper_Console.Nuget
     {
         public static string GetNameAndVersion(this PackageDependency packageDependency)
         {
-            return $"Name: {packageDependency.Id}, Version: {packageDependency.VersionRange.MinVersion}";
+            return $"{packageDependency.Id}, Version: {packageDependency.VersionRange.MinVersion}";
         }
-
         public static string GetNameVersionProjectType(this PackageGroup package)
         {
-            return $"Name: {package.PackageSearchMetadata.Identity.Id}, Version: {package.PackageSearchMetadata.Identity.Version}, Project Type: {package.Dependencies.First().TargetFramework.Framework.ToUiPathProject()}";
+            return $"{package.PackageSearchMetadata.Identity.Id}, Version: {package.PackageSearchMetadata.Identity.Version}, Project Type: {package.Dependencies.First().TargetFramework.Framework.ToUiPathProject()}";
         }
     }
 }

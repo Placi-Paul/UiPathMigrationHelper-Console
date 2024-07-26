@@ -1,5 +1,6 @@
 ﻿using NuGet.Packaging;
 using NuGet.Protocol.Core.Types;
+using System.Text;
 
 namespace UiPathMigrationHelper_Console.Nuget
 {
@@ -12,7 +13,5 @@ namespace UiPathMigrationHelper_Console.Nuget
             PackageSearchMetadata = packageSearchMetadata;
             Dependencies = packageSearchMetadata.DependencySets.Any() ? packageSearchMetadata.DependencySets : Enumerable.Empty<PackageDependencyGroup>();
         }
-
-
     }
 }

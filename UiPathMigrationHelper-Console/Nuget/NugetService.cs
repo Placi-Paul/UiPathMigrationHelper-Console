@@ -44,7 +44,7 @@ namespace UiPathMigrationHelper_Console.Nuget
         }
 
         public async Task<ICollection<PackageGroup>> SearchPackageAsync(
-            string searchTerm = "",
+            string searchTerm,
             int skip = 0,
             int top = 100,
             bool includePrereleases = false,
@@ -54,7 +54,14 @@ namespace UiPathMigrationHelper_Console.Nuget
             return await ListAllAsync(skip, top, includePrereleases, searchFilterType, searchTerm);
         }
 
-        public async Task<IEnumerable<IPackageSearchMetadata>> SearchAsync(
+        public async Task<IPackageSearchMetadata> GetMetadataAsync(PackageIdentity packageIdentity)
+        {
+            PackageMetadataResource packageMetadataResource = await _sourceRepository.GetResourceAsync<PackageMetadataResource>();
+
+            return await packageMetadataResource.GetMetadataAsync(packageIdentity, _sourceCacheContext, _logger, CancellationToken.None);
+        }
+
+        private async Task<IEnumerable<IPackageSearchMetadata>> SearchAsync(
             int skip,
             int take,
             bool includePrereleases,
@@ -65,13 +72,6 @@ namespace UiPathMigrationHelper_Console.Nuget
             var searchFilter = new SearchFilter(includePrereleases, searchFilterType);
 
             return await search.SearchAsync(searchTerm, searchFilter, skip, take, _logger, CancellationToken.None);
-        }
-
-        public async Task<IPackageSearchMetadata> GetMetadataAsync(PackageIdentity packageIdentity)
-        {
-            PackageMetadataResource packageMetadataResource = await _sourceRepository.GetResourceAsync<PackageMetadataResource>();
-
-            return await packageMetadataResource.GetMetadataAsync(packageIdentity, _sourceCacheContext, _logger, CancellationToken.None);
         }
     }
 }

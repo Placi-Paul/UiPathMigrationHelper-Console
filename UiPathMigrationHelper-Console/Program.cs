@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Common;
 using NuGet.Packaging.Core;
-using NuGet.Versioning;
 using UiPathMigrationHelper_Console.Logger;
 using UiPathMigrationHelper_Console.Nuget;
 
