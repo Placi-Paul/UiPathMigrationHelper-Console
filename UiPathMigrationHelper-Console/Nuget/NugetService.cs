@@ -2,48 +2,46 @@
 using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
-using UiPathMigrationHelper_Console.Logger;
 
 namespace UiPathMigrationHelper_Console.Nuget
 {
-    public class NugetService
+    internal class NugetService
     {
-        private readonly ILogger _logger;
+        private readonly ILogger _logger = NullLogger.Instance;
         private SourceRepository _sourceRepository;
         private readonly SourceCacheContext _sourceCacheContext = new SourceCacheContext();
 
-        public NugetService(string sourceUrl, IServiceLogger logger)
+        public NugetService(string sourceUrl)
         {
             //List<Lazy<INuGetResourceProvider>> providers = [.. Repository.Provider.GetCoreV3()];
             //PackageSource packageSource = new PackageSource(sourceUrl);
             //_sourceRepository = new SourceRepository(packageSource, providers);
 
             _sourceRepository = Repository.Factory.GetCoreV3(sourceUrl);
-            _logger = logger;
         }
 
-        public async Task<ICollection<PackageGroup>> ListAllAsync(
+        public async Task<ICollection<Package>> ListAllAsync(
             int skip = 0,
             int top = 100,
             bool includePrereleases = false,
             SearchFilterType searchFilterType = SearchFilterType.IsLatestVersion,
             string searchTerm = "")
         {
-            var results = new List<PackageGroup>();
+            var results = new List<Package>();
             IPackageSearchMetadata metadata;
 
-            var packages = await SearchAsync(skip, top, includePrereleases, searchFilterType, searchTerm);
+            var searchResults = await SearchAsync(skip, top, includePrereleases, searchFilterType, searchTerm);
 
-            foreach (var package in packages)
+            foreach (var searchResult in searchResults)
             {
-                metadata = await GetMetadataAsync(package.Identity);
-                results.Add(new PackageGroup(metadata));
+                metadata = await GetMetadataAsync(searchResult.Identity);
+                results.Add(new Package(metadata));
             }
 
             return results;
         }
 
-        public async Task<ICollection<PackageGroup>> SearchPackageAsync(
+        public async Task<ICollection<Package>> SearchPackageAsync(
             string searchTerm,
             int skip = 0,
             int top = 100,

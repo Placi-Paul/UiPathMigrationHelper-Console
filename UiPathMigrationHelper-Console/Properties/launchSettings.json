@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "UiPathMigrationHelper-Console": {
+      "commandName": "Project",
+      "commandLineArgs": "search -F \"https://pkgs.dev.azure.com/uipath/Public.Feeds/_packaging/UiPath-Official/nuget/v3/index.json\" -n \"UiPath\""
+    }
+  }
+}

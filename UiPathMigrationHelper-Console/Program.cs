@@ -1,107 +1,91 @@
 ﻿using Cocona;
-using Microsoft.Extensions.DependencyInjection;
-using NuGet.Common;
 using NuGet.Packaging.Core;
-using UiPathMigrationHelper_Console.Logger;
 using UiPathMigrationHelper_Console.Nuget;
+using UiPathMigrationHelper_Console.Parameters;
+using UiPathMigrationHelper_Console.UiPath;
 
-internal class Program
+internal class Program : CoconaConsoleAppBase
 {
     public static async Task Main(string[] args)
     {
-        await CoconaApp.CreateHostBuilder()
-            .ConfigureServices(services =>
-            {
-                services.AddSingleton<IServiceLogger, ConsoleLogger>();
-            })
+        await CoconaApp
+            .CreateHostBuilder()
             .RunAsync<Program>(args);
     }
 
-    [Command("list")]
+    [Command(Description = "List all packages and dependencies from a nuget feed")]
     public async Task List(
-        [FromService] IServiceLogger logger,
-        [Option("feed", ['F'])] string sourceFeed,
-        [Option("level", ['l'])] LogLevel minLogLevel = LogLevel.Warning,
-        [Option("skip", ['s'])] int skip = 0,
-        [Option("take", ['t'])] int take = 10
+        [Option(shortName: 'f', Description = "Url package feed or local folder path with nupkg packages")] string feed,
+        PaginationParameters paginationParameters
         )
     {
-        ValidateSource(sourceFeed);
+        ValidateSource(feed);
 
-        logger.SetMininumLogLevel(minLogLevel);
+        var client = new NugetService(feed);
 
-        var client = new NugetService(sourceFeed, logger);
-
-        var packages = await client.ListAllAsync(skip, take);
+        var packages = await client.ListAllAsync(skip: paginationParameters.Skip,top: paginationParameters.Take);
 
         PrintPackageAndDepedencies(packages);
     }
 
-    [Command("search")]
+    [Command(Description ="Search package based on identifier (package name)")]
     public async Task Search(
-        [FromService] IServiceLogger logger,
-        [Option("feed", ['F'])] string sourceFeed,
-        [Option("packageName", ['n'])] string packageName,
-        [Option("level", ['l'])] LogLevel minLogLevel = LogLevel.Warning
+        [Option(shortName: 'f')] string feed,
+        [Option(shortName: 'n')] string packageName,
+        PaginationParameters paginationParameters
         )
     {
-        ValidateSource(sourceFeed);
+        ValidateSource(feed);
 
-        logger.SetMininumLogLevel(minLogLevel);
+        var client = new NugetService(feed);
 
-        var client = new NugetService(sourceFeed, logger);
-
-        var packages = await client.SearchPackageAsync(searchTerm: packageName);
+        var packages = await client.SearchPackageAsync(searchTerm: packageName, skip: paginationParameters.Skip, top: paginationParameters.Take);
 
         PrintPackageAndDepedencies(packages);
     }
 
-    [Command("Check")]
+    [Command(Description ="Checks all packages and dependencies to provide full compatibility matrix.")]
     public async Task Check(
-        [FromService] IServiceLogger logger,
-        [Option("sourceFeed", ['F'] )]string sourceFeed,
-        [Option("libraryFeed", ['L'] )]string libraryFeed,
-        [Option("targetProject")] UiPathProjectType targetProject
+        [Option(shortName:'f')] string feed,
+        [Option(shortName:'l', Description ="Library feed used to analyze dependecies,")] string libraryFeed,
+        [Option(Description ="UiPath project type that all packages should be converted to.")] ProjectType target,
+        PaginationParameters paginationParameters
         )
     {
-        ValidateSource(sourceFeed);
-        
-        var packageService = new NugetService(sourceFeed, logger);
-        var dependencyService = new NugetService(libraryFeed, logger);
+        ValidateSource(feed);
 
-        var packages = await packageService.ListAllAsync();
+        var packageService = new NugetService(feed);
+        var dependencyService = new NugetService(libraryFeed);
+        Package dependencyPackage;
+
+        var packages = await packageService.ListAllAsync(skip: paginationParameters.Skip, top: paginationParameters.Take);
 
         foreach (var package in packages)
         {
-            Console.WriteLine(package.GetNameVersionProjectType());
+            Console.WriteLine(package);
 
-            foreach (var dependecyGroup in package.Dependencies)
+            foreach (var packageDependency in package.Dependencies.First().Packages)
             {
-                foreach (var dependecy in dependecyGroup.Packages)
+                var dependecyData = await dependencyService.GetMetadataAsync(new PackageIdentity(packageDependency.Id, packageDependency.VersionRange.MinVersion));
+
+                if (dependecyData is null)
                 {
-                    var dependecyData = await dependencyService.GetMetadataAsync(new PackageIdentity(dependecy.Id, dependecy.VersionRange.MinVersion));
-
-                    if (dependecyData is null)
-                    {
-                        Console.WriteLine($"! Package NOT found for {dependecy.Id} version{dependecy.VersionRange.MinVersion}");
-                        continue;
-                    }
-
-                    if (dependecyData.DependencySets.Any(ds => ds.TargetFramework.Framework == targetProject.ToNetFramework()))
-                    {
-                        Console.WriteLine($"Match found for {dependecy.GetNameAndVersion()}; Compatible with {targetProject}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"! Match NOT found for {dependecy.GetNameAndVersion()}; NOT compatible with {targetProject}.");
-                    }
+                    Console.WriteLine($"! Package NOT found for {packageDependency.Id} version{packageDependency.VersionRange.MinVersion}");
+                    continue;
                 }
+
+                dependencyPackage = new Package(dependecyData);
+
+                if (!dependencyPackage.ProjectRange.IsCompatible(target))
+                {
+                    Console.Write($"NOT compatible with {target}: ");
+                }
+                Console.WriteLine(dependencyPackage.ToString());
             }
             Console.WriteLine();
         }
     }
 
-    [Ignore]
     private void ValidateSource(string source)
     {
         if (Uri.TryCreate(source, UriKind.Absolute, out var _)) return;
@@ -109,19 +93,17 @@ internal class Program
         throw new CommandExitedException("Feed Url is not valid", 101);
     }
 
-
-    [Ignore]
-    private void PrintPackageAndDepedencies(IEnumerable<PackageGroup> packages)
+    private void PrintPackageAndDepedencies(IEnumerable<Package> packages)
     {
         foreach (var package in packages)
         {
-            Console.WriteLine($"Package: {package.PackageSearchMetadata.Identity.Id}, Version: {package.PackageSearchMetadata.Identity.Version}");
+            Console.WriteLine(package);
 
             foreach (var dependecyGroup in package.Dependencies)
             {
                 foreach (var dependency in dependecyGroup.Packages)
                 {
-                    Console.WriteLine($"  Dependency: {dependency.Id}, TargetFramework: {dependecyGroup.TargetFramework}");
+                    Console.WriteLine($"  Dependency: {dependency.Id}, Version: {dependency.VersionRange}, TargetFramework: {dependecyGroup.TargetFramework}, Compatible with: {dependecyGroup.ToCompatibleUiPathProject()}");
                 }
             }
             Console.WriteLine();

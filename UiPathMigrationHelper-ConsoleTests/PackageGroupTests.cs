@@ -14,7 +14,7 @@ namespace UiPathMigrationHelper_ConsoleTests
             var sut = Substitute.For<IPackageSearchMetadata>();
             sut.DependencySets.Returns(Enumerable.Empty<PackageDependencyGroup>());
 
-            var packageGroup = new PackageGroup(sut);
+            var packageGroup = new Package(sut);
 
             packageGroup.Dependencies.Should().BeEquivalentTo(Enumerable.Empty<PackageDependencyGroup>());
         }
