@@ -4,11 +4,11 @@ using UiPathMigrationHelper_Console.Nuget;
 using UiPathMigrationHelper_Console.Parameters;
 using UiPathMigrationHelper_Console.UiPath;
 
-internal class Program : CoconaConsoleAppBase
+internal class Program
 {
     public static async Task Main(string[] args)
     {
-        await CoconaApp
+        await CoconaLiteApp
             .CreateHostBuilder()
             .RunAsync<Program>(args);
     }
