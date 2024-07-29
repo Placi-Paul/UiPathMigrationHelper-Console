@@ -74,11 +74,11 @@ internal class Program
                     continue;
                 }
 
-                dependencyPackage = new Package(dependecyData);
+                dependencyPackage = new Package(dependecyData, false);
 
                 if (!dependencyPackage.ProjectRange.IsCompatible(target))
                 {
-                    Console.Write($"NOT compatible with {target}: ");
+                    Console.Write($"! NOT compatible with {target}: ");
                 }
                 Console.WriteLine(dependencyPackage.ToString());
             }

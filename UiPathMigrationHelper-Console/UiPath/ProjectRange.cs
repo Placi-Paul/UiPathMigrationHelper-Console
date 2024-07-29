@@ -12,16 +12,16 @@ namespace UiPathMigrationHelper_Console.UiPath
         public bool IsCrossPlatformSupported { get; private set; }
         public bool AllSupported => IsLegacySupported && IsWindowsSupported && IsCrossPlatformSupported;
         public string? OriginalString => _originalString;
-        public ProjectRange(IPackageSearchMetadata package)
+        public ProjectRange(IPackageSearchMetadata package, bool isUiPathProject)
         {
             foreach (var dependencyGroup in package.DependencySets)
             {
-                SetCompatibility(dependencyGroup);
+                SetCompatibility(dependencyGroup, isUiPathProject);
             }
 
             SetOriginalString();
         }
-        private void SetCompatibility(PackageDependencyGroup dependencyGroup)
+        private void SetCompatibility(PackageDependencyGroup dependencyGroup, bool isUiPathProject)
         {
             if (dependencyGroup.TargetFramework.Framework == NetConstants.NETStandard)
             {
@@ -42,7 +42,7 @@ namespace UiPathMigrationHelper_Console.UiPath
                 }
                 else
                 {
-                    IsWindowsSupported = true;
+                    IsWindowsSupported = true && !isUiPathProject; //cannot mark a single uipath project compatible with both, but libraries can be
                     IsCrossPlatformSupported = true;
                 }
             }

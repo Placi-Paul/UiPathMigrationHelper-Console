@@ -9,11 +9,11 @@ namespace UiPathMigrationHelper_Console.Nuget
         public IPackageSearchMetadata Original { get; private set; }
         public IEnumerable<PackageDependencyGroup> Dependencies { get; private set; }
         public ProjectRange ProjectRange { get; private set; }
-        public Package(IPackageSearchMetadata package)
+        public Package(IPackageSearchMetadata package, bool isUiPathProject = true)
         {
             Original = package;
             Dependencies = package.DependencySets.Any() ? package.DependencySets : [];
-            ProjectRange = new ProjectRange(package);
+            ProjectRange = new ProjectRange(package, isUiPathProject);
         }
         public override string ToString()
         {
