@@ -3,9 +3,9 @@ CLI project aimed to help with the migration task
 
 # Commands
 Commands:
-- list      List all packages and dependencies from a nuget feed
-- search    Search package based on identifier (package name)
-- check     Checks all packages and dependencies to provide full compatibility matrix.
+- **list**      List all packages and dependencies from a nuget feed
+- **search**    Search package based on identifier (package name)
+- **check**     Checks all packages and dependencies to provide full compatibility matrix.
 
 Options:
 
