@@ -25,6 +25,6 @@ Tenant > Settings > Deployment > Security
 Select API Key and leave it blank
 
 ### Cloud Feeds
-Check the network page in automation for this API response to get the nuget feeds:
+Check the network page in automation ops for this API response to get the nuget feeds:
 
 https://cloud.uipath.com/{organization-name}/roboticsops_/feeds_/api/Feeds/orchestrator/paged?pageSize=10&pageIndex=0
