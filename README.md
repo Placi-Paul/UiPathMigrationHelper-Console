@@ -57,7 +57,7 @@ Used to check a specific version of the provided package.
 ```
 
 > [!WARNING]
-> The command requires to provide the fully qualified name of the package when searching a specific version.
+> The command requires to provide the fully qualified name of the package when searching for specific version.
 
 -n "uipath.system" -> partial package name
 
