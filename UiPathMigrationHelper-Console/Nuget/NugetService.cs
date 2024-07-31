@@ -77,6 +77,15 @@ namespace UiPathMigrationHelper_Console.Nuget
             return await packageMetadataResource.GetMetadataAsync(packageIdentity, _sourceCacheContext, _logger, CancellationToken.None);
         }
 
+        public async Task<IEnumerable<NuGetVersion>> ListAllVersions(
+            string packageId,
+            bool includePrereleases = true
+            )
+        {
+            var auto = await _sourceRepository.GetResourceAsync<AutoCompleteResource>();
+            return await auto.VersionStartsWith(packageId, string.Empty, includePrereleases, _sourceCacheContext, _logger, CancellationToken.None);
+        }
+
         private async Task<IEnumerable<IPackageSearchMetadata>> SearchAsync(
             int skip,
             int take,

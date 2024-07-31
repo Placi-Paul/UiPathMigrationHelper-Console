@@ -1,5 +1,6 @@
 ﻿using Cocona;
 using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using UiPathMigrationHelper_Console.Nuget;
 using UiPathMigrationHelper_Console.Parameters;
 using UiPathMigrationHelper_Console.UiPath;
@@ -32,10 +33,16 @@ internal class Program
     public async Task Search(
         [Option(shortName: 'f')] string feed,
         [Option(shortName: 'n')] string packageName,
-        [Option(shortName: 'v')] string? version,
+        [Option(shortName: 'v', Description ="(Optional)This parameters works only when 'packageName' contains the fully qualified package id")] string? version,
         PaginationParameters paginationParameters
         )
     {
+        if (string.IsNullOrWhiteSpace(packageName))
+        {
+            Console.WriteLine("PackageName cannot be empty !");
+            return;
+        }
+
         ValidateSource(feed);
 
         var client = new NugetService(feed);
@@ -43,8 +50,18 @@ internal class Program
         if (string.IsNullOrWhiteSpace(version))
         {
             var packages = await client.SearchPackageIdAsync(searchTerm: packageName, skip: paginationParameters.Skip, top: paginationParameters.Take);
+            
+            IEnumerable<NuGetVersion> versions;
 
-            PrintPackageAndDepedencies(packages);
+            foreach (var package in packages)
+            {
+                PrintPackageAndDepedencies([package]);
+                versions = await client.ListAllVersions(package.Original.Identity.Id, true);
+
+                Console.WriteLine($"Available versions for {package.Original.Identity.Id}: ");
+                PrintAllVersions(versions);
+                Console.WriteLine();
+            }
         }
         else
         {
@@ -120,6 +137,14 @@ internal class Program
                 }
             }
             Console.WriteLine();
+        }
+    }
+
+    private void PrintAllVersions(IEnumerable<NuGetVersion> versions)
+    {
+        foreach (var version in versions)
+        {
+            Console.WriteLine($" {version}");
         }
     }
 }
