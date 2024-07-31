@@ -9,8 +9,8 @@
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
 	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
-    <!--<RuntimeIdentifier>win-x64</RuntimeIdentifier>-->
-    <!--<OutputPath>..\Output</OutputPath>-->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <OutputPath>..\Output</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
