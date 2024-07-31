@@ -34,38 +34,43 @@ https://cloud.uipath.com/{organization-name}/roboticsops_/feeds_/api/Feeds/orche
 All commands will allow a **skip** & **take** parameter to limits the search services
 
 ## List
-> list -f {feed}
-<br>
-Command to list all packages & dependencies from a feed.
+List all packages & dependencies from a feed:
+```
+> .\UiPathMigrationHelper-Console.exe list -f {feed}
+```
+
 
 ## Search
-> search -f {feed} -n {packageId}
-<br>
-Used to return all packages with similar name and list all version
-<br>
+Used to search packages and versions:
+```
+> .\UiPathMigrationHelper-Console.exe search -f {feed} -n {packageId}
+```
 
- Example:  
-  > search -f {UiPathOfficialFeed} -n uipath.system
-  <br>
-  ![image](https://github.com/user-attachments/assets/db9d2ca2-d121-43b1-ad3d-929674bb246c)
+Returns all packages with similar name and available versions
+```
+> .\UiPathMigrationHelper-Console.exe search -f {UiPathOfficialFeed} -n uipath.system
+```
 
-> search -f {feed} -n {packageId} -v {version}
-<br>
-  Used to check a specific version of the provided package.
-  
-  !The command requires to provide the fully qualified name of the package.
-  
-  -n "uipath.system" -> partial package name
-  
-  -n "uipath.system.activities" -> fully qualified name
+Used to check a specific version of the provided package.
+```
+.\UiPathMigrationHelper-Console.exe search -f {feed} -n {packageId} -v {version}
+```
 
-  Example:
-  > search -f {UiPathOfficialFeed} -n uipath.database.activities" -v 1.7.0
-<br>
-  ![image](https://github.com/user-attachments/assets/8e4708a6-ab32-4fa5-8fbe-f9e2977c5ec6)
+> [!WARNING]
+> The command requires to provide the fully qualified name of the package when searching a specific version.
+
+-n "uipath.system" -> partial package name
+
+-n "uipath.system.activities" -> fully qualified name
+
+Example:
+```
+> .\UiPathMigrationHelper-Console.exesearch -f {UiPathOfficialFeed} -n uipath.database.activities" -v 1.7.0
+```
 
 ## Check
-> check -f {feed} -l {libraryFeed} --target Legacy|Windows|CrossPlatform
-<br>
+```
+> .\UiPathMigrationHelper-Console.execheck -f {feed} -l {libraryFeed} --target Legacy|Windows|CrossPlatform
+```
 Used to check all available packages from a feed & dependencies from another feed if they are available to migrate.<br>
 '--target' parameter is used to determine the target project.
