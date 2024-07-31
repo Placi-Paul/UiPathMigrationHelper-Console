@@ -2,6 +2,7 @@
 using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
+using NuGet.Versioning;
 
 namespace UiPathMigrationHelper_Console.Nuget
 {
@@ -41,7 +42,7 @@ namespace UiPathMigrationHelper_Console.Nuget
             return results;
         }
 
-        public async Task<ICollection<Package>> SearchPackageAsync(
+        public async Task<ICollection<Package>> SearchPackageIdAsync(
             string searchTerm,
             int skip = 0,
             int top = 100,
@@ -50,6 +51,23 @@ namespace UiPathMigrationHelper_Console.Nuget
             )
         {
             return await ListAllAsync(skip, top, includePrereleases, searchFilterType, searchTerm);
+        }
+
+        public async Task<Package?> SearchPackageIdVersionAsync(
+            string packageId,
+            string version
+            )
+        {
+            NuGetVersion? nugetVersion;
+            if (!NuGetVersion.TryParse(version, out nugetVersion)) return null;
+
+            PackageIdentity package = new PackageIdentity(packageId, nugetVersion);
+
+            var result = await GetMetadataAsync(package);
+
+            if (result == null) return null;
+
+            return new Package(result);
         }
 
         public async Task<IPackageSearchMetadata> GetMetadataAsync(PackageIdentity packageIdentity)

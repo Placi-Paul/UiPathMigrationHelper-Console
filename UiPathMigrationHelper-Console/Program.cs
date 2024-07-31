@@ -32,6 +32,7 @@ internal class Program
     public async Task Search(
         [Option(shortName: 'f')] string feed,
         [Option(shortName: 'n')] string packageName,
+        [Option(shortName: 'v')] string? version,
         PaginationParameters paginationParameters
         )
     {
@@ -39,9 +40,19 @@ internal class Program
 
         var client = new NugetService(feed);
 
-        var packages = await client.SearchPackageAsync(searchTerm: packageName, skip: paginationParameters.Skip, top: paginationParameters.Take);
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            var packages = await client.SearchPackageIdAsync(searchTerm: packageName, skip: paginationParameters.Skip, top: paginationParameters.Take);
 
-        PrintPackageAndDepedencies(packages);
+            PrintPackageAndDepedencies(packages);
+        }
+        else
+        {
+            var package = await client.SearchPackageIdVersionAsync(packageName, version);
+
+            PrintPackageAndDepedencies([package]);
+        }
+        
     }
 
     [Command(Description ="Checks all packages and dependencies to provide full compatibility matrix.")]
@@ -93,13 +104,15 @@ internal class Program
         throw new CommandExitedException("Feed Url is not valid", 101);
     }
 
-    private void PrintPackageAndDepedencies(IEnumerable<Package> packages)
+    private void PrintPackageAndDepedencies(IEnumerable<Package?> packages)
     {
         foreach (var package in packages)
         {
+            if (package is null) continue;
+
             Console.WriteLine(package);
 
-            foreach (var dependecyGroup in package.Dependencies)
+            foreach (var dependecyGroup in package!.Dependencies)
             {
                 foreach (var dependency in dependecyGroup.Packages)
                 {
