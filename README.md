@@ -74,3 +74,6 @@ Example:
 ```
 Used to check all available packages from a feed & dependencies from another feed if they are available to migrate.<br>
 '--target' parameter is used to determine the target project.
+
+> [!WARNING]
+> The tool uses the exact match of the dependency to determine if it's compatible. It does not look for the latest version.
