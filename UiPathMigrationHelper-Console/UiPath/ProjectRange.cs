@@ -12,8 +12,14 @@ namespace UiPathMigrationHelper_Console.UiPath
         public bool IsCrossPlatformSupported { get; private set; }
         public bool AllSupported => IsLegacySupported && IsWindowsSupported && IsCrossPlatformSupported;
         public string? OriginalString => _originalString;
+        public ProjectRange()
+        {
+            
+        }
         public ProjectRange(IPackageSearchMetadata package, bool isUiPathProject)
         {
+            ArgumentNullException.ThrowIfNull(package,nameof(package));
+
             foreach (var dependencyGroup in package.DependencySets)
             {
                 SetCompatibility(dependencyGroup, isUiPathProject);
@@ -42,7 +48,7 @@ namespace UiPathMigrationHelper_Console.UiPath
                 }
                 else
                 {
-                    IsWindowsSupported = true && !isUiPathProject; //cannot mark a single uipath project compatible with both, but libraries can be
+                    IsWindowsSupported = true & !isUiPathProject; //cannot mark a single uipath project compatible with both, but libraries can be
                     IsCrossPlatformSupported = true;
                 }
             }
@@ -66,7 +72,7 @@ namespace UiPathMigrationHelper_Console.UiPath
                 {ProjectType.CrossPlatform, IsCrossPlatformSupported }
             };
 
-            _originalString = string.Join(", ", projectTypeMappings.Where(kvp => kvp.Value).Select(kvp => kvp.Key));
+            _originalString = string.Join(",", projectTypeMappings.Where(kvp => kvp.Value).Select(kvp => kvp.Key));
         }
         public override bool Equals(object? obj)
         {

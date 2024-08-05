@@ -11,9 +11,11 @@ namespace UiPathMigrationHelper_Console.Nuget
         public ProjectRange ProjectRange { get; private set; }
         public Package(IPackageSearchMetadata package, bool isUiPathProject = true)
         {
+            if (package is null) throw new ArgumentNullException(nameof(package));
+
             Original = package;
-            Dependencies = package.DependencySets.Any() ? package.DependencySets : [];
-            ProjectRange = new ProjectRange(package, isUiPathProject);
+            Dependencies = package is not null && package.DependencySets.Any() ? package.DependencySets : [];
+            ProjectRange = new ProjectRange(package!, isUiPathProject);
         }
         public override string ToString()
         {

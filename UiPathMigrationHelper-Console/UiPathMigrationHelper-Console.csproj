@@ -25,4 +25,9 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <!-- <ItemGroup>
+      <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+      <InternalsVisibleTo Include="UiPathMigrationHelper-ConsoleTests" />
+    </ItemGroup> -->
+
 </Project>
