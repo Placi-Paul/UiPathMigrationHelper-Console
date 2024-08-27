@@ -1,5 +1,5 @@
 # UiPathMigrationHelper-Console
-CLI project aimed to help with the migration task
+CLI project aimed to help with the migration between project types (Legacy to Windows, Cross-Platform to Windows etc.)
 
 # Commands
 Commands:
