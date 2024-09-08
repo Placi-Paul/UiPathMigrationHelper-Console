@@ -14,17 +14,23 @@ namespace UiPathMigrationHelper_Console.UiPath
         public string? OriginalString => _originalString;
         public ProjectRange()
         {
-            
+
         }
         public ProjectRange(IPackageSearchMetadata package, bool isUiPathProject)
         {
-            ArgumentNullException.ThrowIfNull(package,nameof(package));
+            ArgumentNullException.ThrowIfNull(package, nameof(package));
 
             foreach (var dependencyGroup in package.DependencySets)
             {
                 SetCompatibility(dependencyGroup, isUiPathProject);
             }
 
+            SetOriginalString();
+        }
+
+        public ProjectRange(PackageDependencyGroup packageDependencyGroup, bool isUiPathProject)
+        {
+            SetCompatibility(packageDependencyGroup, isUiPathProject);
             SetOriginalString();
         }
         private void SetCompatibility(PackageDependencyGroup dependencyGroup, bool isUiPathProject)

@@ -133,7 +133,7 @@ internal class Program
             {
                 foreach (var dependency in dependecyGroup.Packages)
                 {
-                    Console.WriteLine($"  Dependency: {dependency.Id}, Version: {dependency.VersionRange}, TargetFramework: {dependecyGroup.TargetFramework}, Compatible with: {dependecyGroup.ToCompatibleUiPathProject()}");
+                    Console.WriteLine($"  Dependency: {dependency.Id}, Version: {dependency.VersionRange}, TargetFramework: {dependecyGroup.TargetFramework}, Compatible with: {new ProjectRange(dependecyGroup, false).OriginalString}");
                 }
             }
             Console.WriteLine();
