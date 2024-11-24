@@ -13,6 +13,9 @@ Options:
 
   --version     Show version
 
+# Requirements
+The cli requires **[donet 8 runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)** on the machine.
+
 # Feed Configuration
 The cli works with a hosted feed or folder feed.
 
