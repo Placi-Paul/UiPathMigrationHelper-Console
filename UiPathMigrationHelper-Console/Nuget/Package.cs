@@ -15,11 +15,12 @@ namespace UiPathMigrationHelper_Console.Nuget
 
             Original = package;
             Dependencies = package is not null && package.DependencySets.Any() ? package.DependencySets : [];
-            ProjectRange = new ProjectRange(package!, isUiPathProject);
+            ProjectRange = new ProjectRange(package!);
         }
         public override string ToString()
         {
-            return $"{Original.Identity.Id}, Version: {Original.Identity.Version}, Compatible with: {ProjectRange.OriginalString}";
+            return $"{Original.Identity.Id}, Version: {Original.Identity.Version}, " +
+                $"{(ProjectRange.IsUiPathProject ? "ProjectTarget:" : "Compatible with:")} {ProjectRange.OriginalString}";
         }
     }
 }
