@@ -49,7 +49,7 @@ Used to search packages or dependencies and versions:
 > .\UiPathMigrationHelper-Console.exe search -f {feed} -n {packageId}
 ```
 ```
-> .\UiPathMigrationHelper-Console.exe search -f {feed} -d {dependecyId}
+> .\UiPathMigrationHelper-Console.exe search -f {feed} -d {dependencyId}
 ```
 
 Returns all packages with similar name and available versions
