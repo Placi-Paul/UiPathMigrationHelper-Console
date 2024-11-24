@@ -154,7 +154,7 @@ internal class Program
         foreach (var package in packages)
         {
             dependecies = package.Dependencies.SelectMany(dg => dg.Packages).Where(p => p.Id.Contains(dependecyName) && 
-                (hasVersion ? p.VersionRange.MinVersion!.Equals(SemanticVersion.Parse(version!)) : true));
+                (!hasVersion || p.VersionRange.MinVersion!.Equals(SemanticVersion.Parse(version!))));
 
             if (dependecies.Any())
             {
