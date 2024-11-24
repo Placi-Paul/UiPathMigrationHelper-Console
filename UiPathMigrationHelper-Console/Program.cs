@@ -1,10 +1,11 @@
 ﻿using Cocona;
 using NuGet.Packaging.Core;
-using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
+using UiPathMigrationHelper_Console.Extensions;
 using UiPathMigrationHelper_Console.Nuget;
 using UiPathMigrationHelper_Console.Parameters;
 using UiPathMigrationHelper_Console.UiPath;
+using UiPathMigrationHelper_Console.Validations;
 
 internal class Program
 {
@@ -17,72 +18,55 @@ internal class Program
 
     [Command(Description = "List all packages and dependencies from a nuget feed")]
     public async Task List(
-        [Option(shortName: 'f', Description = "Url package feed or local folder path with nupkg packages")] string feed,
+        [Option(shortName: 'f', Description = "Url package feed or local folder path with nupkg packages")][FeedIsValid] string feed,
         PaginationParameters paginationParameters
         )
     {
-        ValidateSource(feed);
-
         var client = new NugetService(feed);
 
         var packages = await client.ListAllAsync(skip: paginationParameters.Skip, top: paginationParameters.Take);
 
-        PrintPackageAndDepedencies(packages);
+        PrintHelpers.PrintPackageAndDepedencies(packages);
     }
 
-    [Command(Description = "Search package based on identifier (package name)")]
+    [Command(Description = "Search package or dependency based on identifier (package name and version)")]
     public async Task Search(
-        [Option(shortName: 'f')] string feed,
-        [Option(shortName: 'n')] string packageName,
+        [Option(shortName: 'f')][FeedIsValid] string feed,
+        [Option(shortName: 'n')] string? packageName,
+        [Option(shortName: 'd', Description = "Search only top level dependecies")] string? dependecyName,
         [Option(shortName: 'v', Description = "(Optional)This parameters works only when 'packageName' contains the fully qualified package id")] string? version,
         PaginationParameters paginationParameters
         )
     {
-        if (string.IsNullOrWhiteSpace(packageName))
+        bool packageProvided = !string.IsNullOrWhiteSpace(packageName);
+        bool dependecyProvided = !string.IsNullOrWhiteSpace(dependecyName);
+
+        if (!(packageProvided ^ dependecyProvided))
         {
-            Console.WriteLine("PackageName cannot be empty !");
+            Console.WriteLine("Provide either a package (-n) or dependecy (-d) name.");
             return;
         }
 
-        ValidateSource(feed);
-
         var client = new NugetService(feed);
-
-        if (string.IsNullOrWhiteSpace(version))
+        if (packageProvided)
         {
-            var packages = await client.SearchPackageIdAsync(searchTerm: packageName, skip: paginationParameters.Skip, top: paginationParameters.Take);
-
-            IEnumerable<NuGetVersion> versions;
-
-            foreach (var package in packages)
-            {
-                PrintPackageAndDepedencies([package]);
-                versions = await client.ListAllVersions(package.Original.Identity.Id, true);
-
-                Console.WriteLine($"Available versions for {package.Original.Identity.Id}: ");
-                PrintAllVersions(versions);
-                Console.WriteLine();
-            }
-        }
-        else
-        {
-            var package = await client.SearchPackageIdVersionAsync(packageName, version);
-
-            PrintPackageAndDepedencies([package]);
+            await SearchForPackage(client, packageName!, version, paginationParameters);
         }
 
+        if (dependecyProvided)
+        {
+            await SearchForDependency(client, dependecyName!, version, paginationParameters);
+        }
     }
 
     [Command(Description = "Checks all packages and dependencies to provide full compatibility matrix.")]
     public async Task Check(
-        [Option(shortName: 'f')] string feed,
+        [Option(shortName: 'f')][FeedIsValid] string feed,
         [Option(shortName: 'l', Description = "Library feed used to analyze dependecies,")] string libraryFeed,
         [Option(Description = "UiPath project type that all packages should be converted to.")] ProjectType target,
         PaginationParameters paginationParameters
         )
     {
-        ValidateSource(feed);
-
         var packageService = new NugetService(feed);
         var dependencyService = new NugetService(libraryFeed);
 
@@ -126,37 +110,58 @@ internal class Program
         }
     }
 
-    private void ValidateSource(string source)
+    private async Task SearchForPackage(
+        NugetService client,
+        string packageName,
+        string? version,
+        PaginationParameters paginationParameters
+        )
     {
-        if (Uri.TryCreate(source, UriKind.Absolute, out var _)) return;
-
-        throw new CommandExitedException("Feed Url is not valid", 101);
-    }
-
-    private void PrintPackageAndDepedencies(IEnumerable<Package?> packages)
-    {
-        foreach (var package in packages)
+        if (string.IsNullOrWhiteSpace(version))
         {
-            if (package is null) continue;
+            var packages = await client.SearchPackageIdAsync(searchTerm: packageName, skip: paginationParameters.Skip, top: paginationParameters.Take);
 
-            Console.WriteLine(package);
+            IEnumerable<NuGetVersion> versions;
 
-            foreach (var dependecyGroup in package!.Dependencies)
+            foreach (var package in packages)
             {
-                foreach (var dependency in dependecyGroup.Packages)
-                {
-                    Console.WriteLine($"  Dependency: {dependency.Id}, Version: {dependency.VersionRange}, TargetFramework: {dependecyGroup.TargetFramework}, Compatible with: {dependecyGroup.ToCompatibleUiPathProject()}");
-                }
+                PrintHelpers.PrintPackageAndDepedencies([package]);
+                versions = await client.ListAllVersions(package.Original.Identity.Id, true);
+
+                Console.WriteLine($"Available versions for {package.Original.Identity.Id}: ");
+                PrintHelpers.PrintAllVersions(versions);
+                Console.WriteLine();
             }
-            Console.WriteLine();
+        }
+        else
+        {
+            var package = await client.SearchPackageIdVersionAsync(packageName, version);
+
+            PrintHelpers.PrintPackageAndDepedencies([package]);
         }
     }
-
-    private void PrintAllVersions(IEnumerable<NuGetVersion> versions)
+    private async Task SearchForDependency(
+        NugetService client,
+        string dependecyName,
+        string? version,
+        PaginationParameters paginationParameters
+        )
     {
-        foreach (var version in versions)
+        var packages = await client.ListAllAsync(paginationParameters.Skip, paginationParameters.Take);
+        IEnumerable<PackageDependency> dependecies;
+        bool hasVersion = !string.IsNullOrWhiteSpace(version);
+
+        foreach (var package in packages)
         {
-            Console.WriteLine($" {version}");
+            dependecies = package.Dependencies.SelectMany(dg => dg.Packages).Where(p => p.Id.Contains(dependecyName) && 
+                (!hasVersion || p.VersionRange.MinVersion!.Equals(SemanticVersion.Parse(version!))));
+
+            if (dependecies.Any())
+            {
+                Console.WriteLine($"{package}");
+                PrintHelpers.PrintAllDependecies(dependecies);
+                Console.WriteLine();
+            }
         }
     }
 }
