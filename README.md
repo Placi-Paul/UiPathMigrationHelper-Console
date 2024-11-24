@@ -13,6 +13,9 @@ Options:
 
   --version     Show version
 
+# Requirements
+The cli requires **[donet 8 runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)** on the machine.
+
 # Feed Configuration
 The cli works with a hosted feed or folder feed.
 
@@ -41,9 +44,15 @@ List all packages & dependencies from a feed:
 
 
 ## Search
-Used to search packages and versions:
+Used to search packages or dependencies and versions:
+> [!WARNING]
+> Dependecy search works only for top level dependecies (first level).
+
 ```
 > .\UiPathMigrationHelper-Console.exe search -f {feed} -n {packageId}
+```
+```
+> .\UiPathMigrationHelper-Console.exe search -f {feed} -d {dependencyId}
 ```
 
 Returns all packages with similar name and available versions
