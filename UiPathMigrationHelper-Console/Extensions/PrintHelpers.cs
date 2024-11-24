@@ -1,4 +1,5 @@
-﻿using NuGet.Versioning;
+﻿using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using UiPathMigrationHelper_Console.Nuget;
 using UiPathMigrationHelper_Console.UiPath;
 
@@ -18,7 +19,7 @@ namespace UiPathMigrationHelper_Console.Extensions
                 {
                     foreach (var dependency in dependecyGroup.Packages)
                     {
-                        Console.WriteLine($"  Dependency: {dependency.Id}, Version: {dependency.VersionRange}, TargetFramework: {dependecyGroup.TargetFramework}, Compatible with: {dependecyGroup.ToCompatibleUiPathProject()}");
+                        Console.WriteLine($" Dependency: {dependency.Id}, Version: {dependency.VersionRange}, TargetFramework: {dependecyGroup.TargetFramework}, Compatible with: {dependecyGroup.ToCompatibleUiPathProject()}");
                     }
                 }
                 Console.WriteLine();
@@ -30,6 +31,14 @@ namespace UiPathMigrationHelper_Console.Extensions
             foreach (var version in versions)
             {
                 Console.WriteLine($" {version}");
+            }
+        }
+
+        public static void PrintAllDependecies(IEnumerable<PackageDependency> dependencies)
+        {
+            foreach (var dependency in dependencies)
+            {
+                Console.WriteLine($" Dependency: {dependency.Id} Version: {dependency.VersionRange}");
             }
         }
     }
