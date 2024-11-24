@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Cocona.Lite" Version="2.2.0" />
-    <PackageReference Include="NuGet.Protocol" Version="6.10.1" />
+    <PackageReference Include="NuGet.Protocol" Version="6.12.1" />
   </ItemGroup>
 
   <ItemGroup>
