@@ -11,23 +11,29 @@ namespace UiPathMigrationHelper_Console.UiPath
         public bool IsWindowsSupported { get; private set; }
         public bool IsCrossPlatformSupported { get; private set; }
         public bool AllSupported => IsLegacySupported && IsWindowsSupported && IsCrossPlatformSupported;
+        public bool IsUiPathProject { get; private set; } = false;
         public string? OriginalString => _originalString;
-        public ProjectRange()
-        {
-            
-        }
-        public ProjectRange(IPackageSearchMetadata package, bool isUiPathProject)
+
+        public ProjectRange(IPackageSearchMetadata package)
         {
             ArgumentNullException.ThrowIfNull(package,nameof(package));
 
-            foreach (var dependencyGroup in package.DependencySets)
+            if (package.DependencySets.Any(ds => ds.Packages.Any(x => x.Id.Contains("UiPath.System.Activities"))))
             {
-                SetCompatibility(dependencyGroup, isUiPathProject);
+                IsUiPathProject = true;
+                SetCompatibility(package.DependencySets.First());
+            }
+            else
+            {
+                foreach (var dependencyGroup in package.DependencySets)
+                {
+                    SetCompatibility(dependencyGroup);
+                }
             }
 
             SetOriginalString();
         }
-        private void SetCompatibility(PackageDependencyGroup dependencyGroup, bool isUiPathProject)
+        private void SetCompatibility(PackageDependencyGroup dependencyGroup)
         {
             if (dependencyGroup.TargetFramework.Framework == NetConstants.NETStandard)
             {
@@ -48,7 +54,7 @@ namespace UiPathMigrationHelper_Console.UiPath
                 }
                 else
                 {
-                    IsWindowsSupported = true & !isUiPathProject; //cannot mark a single uipath project compatible with both, but libraries can be
+                    IsWindowsSupported = true & !IsUiPathProject; //cannot mark a single uipath project compatible with both, but libraries can be
                     IsCrossPlatformSupported = true;
                 }
             }

@@ -1,5 +1,6 @@
 ﻿using Cocona;
 using NuGet.Packaging.Core;
+using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using UiPathMigrationHelper_Console.Nuget;
 using UiPathMigrationHelper_Console.Parameters;
@@ -24,16 +25,16 @@ internal class Program
 
         var client = new NugetService(feed);
 
-        var packages = await client.ListAllAsync(skip: paginationParameters.Skip,top: paginationParameters.Take);
+        var packages = await client.ListAllAsync(skip: paginationParameters.Skip, top: paginationParameters.Take);
 
         PrintPackageAndDepedencies(packages);
     }
 
-    [Command(Description ="Search package based on identifier (package name)")]
+    [Command(Description = "Search package based on identifier (package name)")]
     public async Task Search(
         [Option(shortName: 'f')] string feed,
         [Option(shortName: 'n')] string packageName,
-        [Option(shortName: 'v', Description ="(Optional)This parameters works only when 'packageName' contains the fully qualified package id")] string? version,
+        [Option(shortName: 'v', Description = "(Optional)This parameters works only when 'packageName' contains the fully qualified package id")] string? version,
         PaginationParameters paginationParameters
         )
     {
@@ -50,7 +51,7 @@ internal class Program
         if (string.IsNullOrWhiteSpace(version))
         {
             var packages = await client.SearchPackageIdAsync(searchTerm: packageName, skip: paginationParameters.Skip, top: paginationParameters.Take);
-            
+
             IEnumerable<NuGetVersion> versions;
 
             foreach (var package in packages)
@@ -69,14 +70,14 @@ internal class Program
 
             PrintPackageAndDepedencies([package]);
         }
-        
+
     }
 
-    [Command(Description ="Checks all packages and dependencies to provide full compatibility matrix.")]
+    [Command(Description = "Checks all packages and dependencies to provide full compatibility matrix.")]
     public async Task Check(
-        [Option(shortName:'f')] string feed,
-        [Option(shortName:'l', Description ="Library feed used to analyze dependecies,")] string libraryFeed,
-        [Option(Description ="UiPath project type that all packages should be converted to.")] ProjectType target,
+        [Option(shortName: 'f')] string feed,
+        [Option(shortName: 'l', Description = "Library feed used to analyze dependecies,")] string libraryFeed,
+        [Option(Description = "UiPath project type that all packages should be converted to.")] ProjectType target,
         PaginationParameters paginationParameters
         )
     {
@@ -84,31 +85,42 @@ internal class Program
 
         var packageService = new NugetService(feed);
         var dependencyService = new NugetService(libraryFeed);
+
         Package dependencyPackage;
+        List<PackageDependency> dependenciesNotCompatible = [];
 
         var packages = await packageService.ListAllAsync(skip: paginationParameters.Skip, top: paginationParameters.Take);
 
         foreach (var package in packages)
         {
-            Console.WriteLine(package);
-
             foreach (var packageDependency in package.Dependencies.First().Packages)
             {
                 var dependecyData = await dependencyService.GetMetadataAsync(new PackageIdentity(packageDependency.Id, packageDependency.VersionRange.MinVersion));
 
                 if (dependecyData is null)
                 {
-                    Console.WriteLine($"! Package NOT found for {packageDependency.Id} version{packageDependency.VersionRange.MinVersion}");
+                    dependenciesNotCompatible.Add(packageDependency);
                     continue;
                 }
 
-                dependencyPackage = new Package(dependecyData, false);
+                dependencyPackage = new Package(dependecyData);
 
                 if (!dependencyPackage.ProjectRange.IsCompatible(target))
                 {
-                    Console.Write($"! NOT compatible with {target}: ");
+                    dependenciesNotCompatible.Add(packageDependency);
                 }
-                Console.WriteLine(dependencyPackage.ToString());
+            }
+
+            if (!dependenciesNotCompatible.Any())
+            {
+                Console.WriteLine($"{package} can be migrated.");
+                continue;
+            }
+
+            Console.WriteLine($"! {package} cannot be migrated to {target}");
+            foreach (var dependency in dependenciesNotCompatible)
+            {
+                Console.WriteLine($"Dependency not compatible:{dependency.Id} Version:{dependency.VersionRange.MinVersion}");
             }
             Console.WriteLine();
         }

@@ -5,6 +5,7 @@ using NuGet.Protocol.Core.Types;
 using UiPathMigrationHelper_Console.Nuget;
 using UiPathMigrationHelper_Console.UiPath;
 using NuGet.Frameworks;
+using NuGet.Packaging.Core;
 
 
 
@@ -15,13 +16,9 @@ namespace UiPathMigrationHelper_ConsoleTests
         [Fact]
         public void ProjectRange_ShouldThrowArgumentNull_WhenPackageIsNull()
         {
-            IPackageSearchMetadata package = null;
-
-            var sut = () => { new ProjectRange(package, false); };
-            var sut2 = () => { new ProjectRange(package, true); };
+            var sut = () => { new ProjectRange(null!); };
 
             sut.Should().Throw<ArgumentNullException>();
-            sut2.Should().Throw<ArgumentNullException>();
         }
 
         public record DetermineSingleProjectType(
@@ -133,14 +130,24 @@ namespace UiPathMigrationHelper_ConsoleTests
             )
         {
             var framework = new NuGetFramework(testDataInput.DotNetFramework, new Version(6, 0, 0), testDataInput.isPlatformSpecific ? "windows" : "", new Version(7, 0, 0));
+            PackageDependency package;
 
-            var dependencyGroup = new PackageDependencyGroup(framework, []);
+            if (testDataInput.isUipathProject)
+            {
+                package = new PackageDependency("UiPath.System.Activities");
+            }
+            else
+            {
+                package = new PackageDependency("Test");
+            }
+
+            var dependencyGroup = new PackageDependencyGroup(framework, [package]);
             
 
             IPackageSearchMetadata packageSearch = Substitute.For<IPackageSearchMetadata>();
             packageSearch.DependencySets.Returns([dependencyGroup]);
 
-            var sut = new ProjectRange(packageSearch, testDataInput.isUipathProject);
+            var sut = new ProjectRange(packageSearch);
 
             sut.IsLegacySupported.Should().Be(testDataInput.isLegacy, testDataInput.ToString());
             sut.IsWindowsSupported.Should().Be(testDataInput.isWindows, testDataInput.ToString());
