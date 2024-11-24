@@ -18,7 +18,7 @@ namespace UiPathMigrationHelper_Console.UiPath
         {
             ArgumentNullException.ThrowIfNull(package,nameof(package));
 
-            if (package.DependencySets.Any(ds => ds.Packages.Any(x => x.Id.Contains("UiPath.System"))))
+            if (package.DependencySets.Any(ds => ds.Packages.Any(x => x.Id.Equals("UiPath.System.Activities"))))
             {
                 IsUiPathProject = true;
                 SetCompatibility(package.DependencySets.First());
