@@ -41,9 +41,15 @@ List all packages & dependencies from a feed:
 
 
 ## Search
-Used to search packages and versions:
+Used to search packages or dependencies and versions:
+> [!WARNING]
+> Dependecy search works only for top level dependecies (first level).
+
 ```
 > .\UiPathMigrationHelper-Console.exe search -f {feed} -n {packageId}
+```
+```
+> .\UiPathMigrationHelper-Console.exe search -f {feed} -d {dependecyId}
 ```
 
 Returns all packages with similar name and available versions
